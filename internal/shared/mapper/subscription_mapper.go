@@ -32,3 +32,17 @@ func ToSubscriptionModel(dto dto.CreateSubscriptionRequest) (*model.Subscription
 		EndDate:     endDate,
 	}, nil
 }
+
+func ToSubscriptionResponse(sub model.Subscription) dto.SubscriptionResponse {
+	resp := dto.SubscriptionResponse{
+		ID:          sub.ID.String(),
+		ServiceName: sub.ServiceName,
+		Price:       sub.Price,
+		UserID:      sub.UserID.String(),
+		StartDate:   sub.StartDate.Format("01-2006"),
+	}
+	if sub.EndDate != nil {
+		resp.EndDate = sub.EndDate.Format("01-2006")
+	}
+	return resp
+}
