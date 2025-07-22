@@ -1,10 +1,9 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT}
 
 database:
-  host: localhost
-  port: 5432
-  user: postgres
-  password: postgres
-  name: subscriptions
-
+  host: ${DB_HOST}
+  port: ${DB_PORT}
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}
