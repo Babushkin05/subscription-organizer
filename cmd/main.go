@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
+	_ "github.com/Babushkin05/subscription-organizer/docs"
 	"github.com/Babushkin05/subscription-organizer/internal/application/usecase"
 	"github.com/Babushkin05/subscription-organizer/internal/config"
 	httpService "github.com/Babushkin05/subscription-organizer/internal/infrastructure/delivery/http"
@@ -13,6 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 func main() {
@@ -49,6 +52,7 @@ func main() {
 
 	// Register routes
 	httpService.RegisterRoutes(r, subHandler)
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// Run server
 	addr := ":" + strconv.Itoa(cfg.Server.Port)

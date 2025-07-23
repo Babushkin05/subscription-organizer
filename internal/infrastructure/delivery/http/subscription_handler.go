@@ -19,23 +19,33 @@ func NewSubscriptionHandler(service port.SubscriptionService) *SubscriptionHandl
 	return &SubscriptionHandler{service: service}
 }
 
-// POST /subscriptions
+// CreateSubscription godoc
+// @Summary Create a new subscription
+// @Description Creates a new subscription for a user
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param subscription body dto.CreateSubscriptionRequest true "Subscription to create"
+// @Success 201 {object} dto.SubscriptionResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /subscriptions [post]
 func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
 	var req dto.CreateSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	sub, err := mapper.ToSubscriptionModel(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format, use MM-YYYY"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid date format, use MM-YYYY"})
 		return
 	}
 
 	err = h.service.CreateSubscription(c.Request.Context(), sub)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create subscription"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to create subscription"})
 		return
 	}
 
@@ -43,18 +53,27 @@ func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
 	c.JSON(http.StatusCreated, resp)
 }
 
-// GET /subscriptions/:id
+// GetSubscription godoc
+// @Summary Get a subscription by ID
+// @Description Returns a single subscription
+// @Tags subscriptions
+// @Produce json
+// @Param id path string true "Subscription ID"
+// @Success 200 {object} dto.SubscriptionResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 404 {object} dto.ErrorResponse
+// @Router /subscriptions/{id} [get]
 func (h *SubscriptionHandler) GetSubscription(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subscription id"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
 		return
 	}
 
 	sub, err := h.service.GetSubscription(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "subscription not found"})
+		c.JSON(http.StatusNotFound, dto.ErrorResponse{Error: "subscription not found"})
 		return
 	}
 
@@ -62,24 +81,35 @@ func (h *SubscriptionHandler) GetSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// PUT /subscriptions/:id
+// UpdateSubscription godoc
+// @Summary Update a subscription
+// @Description Updates a subscription by ID
+// @Tags subscriptions
+// @Accept json
+// @Produce json
+// @Param id path string true "Subscription ID"
+// @Param subscription body dto.CreateSubscriptionRequest true "Updated subscription data"
+// @Success 200 {object} dto.SubscriptionResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /subscriptions/{id} [put]
 func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subscription id"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
 		return
 	}
 
 	var req dto.CreateSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
 		return
 	}
 
 	sub, err := mapper.ToSubscriptionModel(req)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format, use MM-YYYY"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid date format, use MM-YYYY"})
 		return
 	}
 
@@ -87,7 +117,7 @@ func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 
 	err = h.service.UpdateSubscription(c.Request.Context(), sub)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update subscription"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to update subscription"})
 		return
 	}
 
@@ -95,26 +125,44 @@ func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// DELETE /subscriptions/:id
+// DeleteSubscription godoc
+// @Summary Delete a subscription
+// @Description Soft-deletes a subscription by ID
+// @Tags subscriptions
+// @Produce json
+// @Param id path string true "Subscription ID"
+// @Success 200 {object} dto.MessageResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /subscriptions/{id} [delete]
 func (h *SubscriptionHandler) DeleteSubscription(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid subscription id"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
 		return
 	}
 
 	err = h.service.DeleteSubscription(c.Request.Context(), id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete subscription"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to delete subscription"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "subscription deleted"})
+	c.JSON(http.StatusOK, dto.MessageResponse{Message: "subscription deleted"})
 }
 
-// GET /subscriptions
-// Опциональные query-параметры: user_id, service_name
+// ListSubscriptions godoc
+// @Summary List all subscriptions
+// @Description Returns a list of subscriptions (optionally filtered by user_id and service_name)
+// @Tags subscriptions
+// @Produce json
+// @Param user_id query string false "User UUID"
+// @Param service_name query string false "Service Name"
+// @Success 200 {array} dto.SubscriptionResponse
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /subscriptions [get]
 func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
@@ -123,17 +171,15 @@ func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 	if userIDStr != "" {
 		uid, err := uuid.Parse(userIDStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid user_id"})
 			return
 		}
 		userID = &uid
 	}
 
-	// Так как в интерфейсе ListSubscriptions() без фильтров,
-	// фильтрация в репозитории или сервисе - нужно расширить, если нужно.
 	subs, err := h.service.ListSubscriptions(c.Request.Context())
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list subscriptions"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to list subscriptions"})
 		return
 	}
 
@@ -151,8 +197,19 @@ func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 	c.JSON(http.StatusOK, filtered)
 }
 
-// GET /subscriptions/cost?user_id=&service_name=&from=&to=
-// Подсчет общей стоимости за период с фильтрацией
+// CalculateTotalCost godoc
+// @Summary Calculate total subscription cost
+// @Description Calculates the total cost of subscriptions over a time period with optional filters
+// @Tags subscriptions
+// @Produce json
+// @Param user_id query string false "User UUID"
+// @Param service_name query string false "Service Name"
+// @Param from query string true "Start period in MM-YYYY"
+// @Param to query string true "End period in MM-YYYY"
+// @Success 200 {object} map[string]int
+// @Failure 400 {object} dto.ErrorResponse
+// @Failure 500 {object} dto.ErrorResponse
+// @Router /subscriptions/cost [get]
 func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
@@ -160,19 +217,19 @@ func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 	toStr := c.Query("to")
 
 	if fromStr == "" || toStr == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "'from' and 'to' query parameters required, format MM-YYYY"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "'from' and 'to' query parameters required, format MM-YYYY"})
 		return
 	}
 
 	from, err := time.Parse("01-2006", fromStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'from' date format, use MM-YYYY"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid 'from' date format, use MM-YYYY"})
 		return
 	}
 
 	to, err := time.Parse("01-2006", toStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid 'to' date format, use MM-YYYY"})
+		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid 'to' date format, use MM-YYYY"})
 		return
 	}
 
@@ -180,7 +237,7 @@ func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 	if userIDStr != "" {
 		uid, err := uuid.Parse(userIDStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user_id"})
+			c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid user_id"})
 			return
 		}
 		userID = &uid
@@ -193,9 +250,9 @@ func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 
 	total, err := h.service.CalculateTotalCost(c.Request.Context(), userID, svcNamePtr, from, to)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to calculate total cost"})
+		c.JSON(http.StatusInternalServerError, dto.ErrorResponse{Error: "failed to calculate total cost"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"total_cost": total})
+	c.JSON(http.StatusOK, gin.H{"total_cost": total}) // этот можно оставить map, swag его съест
 }

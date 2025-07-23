@@ -26,3 +26,6 @@ ifndef name
 	$(error "Usage: make migrate-new name=create_something")
 endif
 	migrate create -ext sql -dir $(MIGRATIONS_DIR) -seq $(name)
+
+swaga:
+	swag init --dir cmd,internal/infrastructure/delivery/http,internal/shared/dto --output docs
