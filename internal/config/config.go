@@ -19,6 +19,11 @@ type Config struct {
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
 	} `yaml:"database"`
+
+	LoggerConfig struct {
+		Level  string `yaml:"level"`
+		Output string `yaml:"output"`
+	} `yaml:"logger"`
 }
 
 func MustLoad() *Config {

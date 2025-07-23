@@ -11,6 +11,7 @@ import (
 	"github.com/Babushkin05/subscription-organizer/internal/config"
 	httpService "github.com/Babushkin05/subscription-organizer/internal/infrastructure/delivery/http"
 	"github.com/Babushkin05/subscription-organizer/internal/infrastructure/repository/postgres"
+	"github.com/Babushkin05/subscription-organizer/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
@@ -23,6 +24,15 @@ func main() {
 	cfg := config.MustLoad()
 	log.Println("Config loaded successfully")
 
+	err := logger.Init(logger.Config{
+		Level:  cfg.LoggerConfig.Level,
+		Output: cfg.LoggerConfig.Output,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize logger: %v", err)
+	}
+	logger.Log.Info("Logger initialized successfully")
+
 	// Connect to DB
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		cfg.DataBase.Host,
@@ -30,13 +40,12 @@ func main() {
 		cfg.DataBase.User,
 		cfg.DataBase.Password,
 		cfg.DataBase.Name)
-	log.Println("DSN:", dsn)
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("failed to connect to DB: %v", err)
 	}
 	defer db.Close()
-	log.Println("Connected to DB")
+	logger.Log.Info("Connected to DB")
 
 	// Init repository
 	subRepo := postgres.NewSubscriptionRepository(db)
@@ -56,7 +65,7 @@ func main() {
 
 	// Run server
 	addr := ":" + strconv.Itoa(cfg.Server.Port)
-	log.Printf("Starting server at %s\n", addr)
+	logger.Log.Info("Starting server")
 	if err := r.Run(addr); err != nil && err != http.ErrServerClosed {
 		log.Fatalf("server error: %v", err)
 	}

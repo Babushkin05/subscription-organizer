@@ -7,6 +7,7 @@ import (
 	"github.com/Babushkin05/subscription-organizer/internal/application/port"
 	"github.com/Babushkin05/subscription-organizer/internal/shared/dto"
 	"github.com/Babushkin05/subscription-organizer/internal/shared/mapper"
+	"github.com/Babushkin05/subscription-organizer/pkg/logger"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
@@ -31,6 +32,7 @@ func NewSubscriptionHandler(service port.SubscriptionService) *SubscriptionHandl
 // @Failure 500 {object} dto.ErrorResponse
 // @Router /subscriptions [post]
 func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
+	logger.Log.Info("CreateSubscription: received request")
 	var req dto.CreateSubscriptionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: err.Error()})
@@ -50,6 +52,7 @@ func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
 	}
 
 	resp := mapper.ToSubscriptionResponse(*sub)
+	logger.Log.Infof("CreateSubscription: subscription created with ID %s", resp.ID)
 	c.JSON(http.StatusCreated, resp)
 }
 
@@ -65,6 +68,8 @@ func (h *SubscriptionHandler) CreateSubscription(c *gin.Context) {
 // @Router /subscriptions/{id} [get]
 func (h *SubscriptionHandler) GetSubscription(c *gin.Context) {
 	idStr := c.Param("id")
+	logger.Log.Infof("GetSubscription: getting subscription %s", idStr)
+
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
@@ -78,6 +83,7 @@ func (h *SubscriptionHandler) GetSubscription(c *gin.Context) {
 	}
 
 	resp := mapper.ToSubscriptionResponse(*sub)
+	logger.Log.Infof("GetSubscription: found subscription %s", id)
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -95,6 +101,7 @@ func (h *SubscriptionHandler) GetSubscription(c *gin.Context) {
 // @Router /subscriptions/{id} [put]
 func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 	idStr := c.Param("id")
+	logger.Log.Infof("UpdateSubscription: updating subscription %s", idStr)
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
@@ -122,6 +129,7 @@ func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 	}
 
 	resp := mapper.ToSubscriptionResponse(*sub)
+	logger.Log.Infof("UpdateSubscription: updated subscription %s", sub.ID)
 	c.JSON(http.StatusOK, resp)
 }
 
@@ -137,6 +145,8 @@ func (h *SubscriptionHandler) UpdateSubscription(c *gin.Context) {
 // @Router /subscriptions/{id} [delete]
 func (h *SubscriptionHandler) DeleteSubscription(c *gin.Context) {
 	idStr := c.Param("id")
+	logger.Log.Infof("DeleteSubscription: deleting subscription %s", idStr)
+
 	id, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "invalid subscription id"})
@@ -149,6 +159,7 @@ func (h *SubscriptionHandler) DeleteSubscription(c *gin.Context) {
 		return
 	}
 
+	logger.Log.Infof("DeleteSubscription: deleted subscription %s", id)
 	c.JSON(http.StatusOK, dto.MessageResponse{Message: "subscription deleted"})
 }
 
@@ -166,6 +177,7 @@ func (h *SubscriptionHandler) DeleteSubscription(c *gin.Context) {
 func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 	userIDStr := c.Query("user_id")
 	serviceName := c.Query("service_name")
+	logger.Log.Infof("ListSubscriptions: query user_id=%s, service_name=%s", userIDStr, serviceName)
 
 	var userID *uuid.UUID
 	if userIDStr != "" {
@@ -194,6 +206,7 @@ func (h *SubscriptionHandler) ListSubscriptions(c *gin.Context) {
 		filtered = append(filtered, mapper.ToSubscriptionResponse(*s))
 	}
 
+	logger.Log.Infof("ListSubscriptions: returned %d subscriptions", len(filtered))
 	c.JSON(http.StatusOK, filtered)
 }
 
@@ -215,6 +228,7 @@ func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 	serviceName := c.Query("service_name")
 	fromStr := c.Query("from")
 	toStr := c.Query("to")
+	logger.Log.Infof("CalculateTotalCost: user_id=%s, service_name=%s, from=%s, to=%s", userIDStr, serviceName, fromStr, toStr)
 
 	if fromStr == "" || toStr == "" {
 		c.JSON(http.StatusBadRequest, dto.ErrorResponse{Error: "'from' and 'to' query parameters required, format MM-YYYY"})
@@ -254,5 +268,6 @@ func (h *SubscriptionHandler) CalculateTotalCost(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"total_cost": total}) // этот можно оставить map, swag его съест
+	logger.Log.Infof("CalculateTotalCost: total cost = %d", total)
+	c.JSON(http.StatusOK, gin.H{"total_cost": total})
 }

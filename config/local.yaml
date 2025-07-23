@@ -7,3 +7,7 @@ database:
   user: postgres
   password: postgres
   name: subscriptions
+
+logger:
+  level: info         # debug, info, warn, error
+  output: stdout      # stdout, stderr или путь к файлу
