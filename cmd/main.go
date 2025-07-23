@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -20,12 +21,13 @@ func main() {
 	log.Println("Config loaded successfully")
 
 	// Connect to DB
-	dsn := "host=" + cfg.DataBase.Host +
-		" port=" + strconv.Itoa(cfg.DataBase.Port) +
-		" user=" + cfg.DataBase.User +
-		" password=" + cfg.DataBase.Password +
-		" dbname=" + cfg.DataBase.Name +
-		" sslmode=disable"
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		cfg.DataBase.Host,
+		cfg.DataBase.Port,
+		cfg.DataBase.User,
+		cfg.DataBase.Password,
+		cfg.DataBase.Name)
+	log.Println("DSN:", dsn)
 	db, err := sqlx.Connect("postgres", dsn)
 	if err != nil {
 		log.Fatalf("failed to connect to DB: %v", err)

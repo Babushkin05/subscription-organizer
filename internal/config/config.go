@@ -18,7 +18,7 @@ type Config struct {
 		User     string `yaml:"user"`
 		Password string `yaml:"password"`
 		Name     string `yaml:"name"`
-	} `yaml:"auth_service"`
+	} `yaml:"database"`
 }
 
 func MustLoad() *Config {
